@@ -210,26 +210,26 @@ public class MultiBuilder : EditorWindow
 		return false;
 	}
 
-	private static bool BuildFlashPlayer (bool release)
-	{
-		BuildOptions opt = BuildOptions.None;
-		// 開発用ビルドの場合のオプション設定
-//		if (release == false) {
-//			opt |= BuildOptions.Development | BuildOptions.ConnectWithProfiler | BuildOptions.AllowDebugging;
+//	private static bool BuildFlashPlayer (bool release)
+//	{
+//		BuildOptions opt = BuildOptions.None;
+//		// 開発用ビルドの場合のオプション設定
+////		if (release == false) {
+////			opt |= BuildOptions.Development | BuildOptions.ConnectWithProfiler | BuildOptions.AllowDebugging;
+////		}
+//		// ビルド
+//		// シーン、出力ファイル（フォルダ）、ターゲット、オプションを指定
+//		string folder = path + "/Flash";
+//		Directory.CreateDirectory (folder);
+//		string errorMsg = BuildPipeline.BuildPlayer (scene, folder + "/Flash.swf", BuildTarget.FlashPlayer, opt);
+//		
+//		if (string.IsNullOrEmpty (errorMsg)) {
+//			Debug.Log ("Build( Flash ) Success.");
+//			return true;
 //		}
-		// ビルド
-		// シーン、出力ファイル（フォルダ）、ターゲット、オプションを指定
-		string folder = path + "/Flash";
-		Directory.CreateDirectory (folder);
-		string errorMsg = BuildPipeline.BuildPlayer (scene, folder + "/Flash.swf", BuildTarget.FlashPlayer, opt);
-		
-		if (string.IsNullOrEmpty (errorMsg)) {
-			Debug.Log ("Build( Flash ) Success.");
-			return true;
-		}
-		
-		return false;
-	}
+//		
+//		return false;
+//	}
 	// iOSビルド
 	private static bool BuildiOS (bool release)
 	{

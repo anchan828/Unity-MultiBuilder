@@ -22,6 +22,7 @@ public class MultiBuilder : EditorWindow
 	private const string MULTI_BUILD_IOS = "MultiBuildiOS";
 	private const string MULTI_BUILD_ANDROID = "MultiBuildAndroid";
 	private const string MULTI_BUILD_FLASH = "MultiBuildFlash";
+	private static string[] scene;
 
 	[MenuItem("MultiBuilder/MultiBuilderMenu", false, 100000)]
 	static void Init ()
@@ -32,7 +33,7 @@ public class MultiBuilder : EditorWindow
 		w = (MultiBuilder)EditorWindow.GetWindow (typeof(MultiBuilder));
 		w.maxSize = new Vector2 (550, 600);
 		w.minSize = new Vector2 (550, 600);
-		w.Show ();
+		w.ShowPopup ();
 	}
 
 	static void GetPlatformData ()
@@ -97,7 +98,7 @@ public class MultiBuilder : EditorWindow
 		
 		for (int i = 0; i < editorScenes.Length; i++) {
 			EditorGUILayout.BeginHorizontal ();
-			editorScenes[i].enabled = GUILayout.Toggle (editorScenes[i].enabled, editorScenes[i].path);
+			editorScenes [i].enabled = GUILayout.Toggle (editorScenes [i].enabled, editorScenes [i].path);
 			Rect r = GUILayoutUtility.GetRect (15, 15);
 			EditorGUI.LabelField (new Rect (Screen.width - 90, r.y, r.width + 5, r.height + 5), "" + i, "");
 			EditorGUILayout.EndHorizontal ();
@@ -156,7 +157,7 @@ public class MultiBuilder : EditorWindow
 		
 		EditorGUILayout.EndVertical ();
 		GUILayout.Space (40);
-		EditorGUILayout.BeginVertical (GUILayout.Width(100));
+		EditorGUILayout.BeginVertical (GUILayout.Width (100));
 		EditorStyles.label.fontStyle = FontStyle.Bold;
 		EditorGUILayout.LabelField ("BuildOptions", "Preview Only", GUILayout.Width (backGroundImage.width / 2));
 		EditorStyles.label.fontStyle = FontStyle.Normal;
@@ -173,7 +174,8 @@ public class MultiBuilder : EditorWindow
 		Rect br = GUILayoutUtility.GetRect (Screen.width / 2, 25);
 		if (GUI.Button (new Rect ((Screen.width / 4) * 3 - 20, Screen.height - 60, Screen.width / 4, 25), "Build")) {
 			BuildStart ();
-		}	SetPlatformData ();
+		}
+		SetPlatformData ();
 	}
 
 	static Texture2D SetPlatformImage (Texture2D tex, string texURL)
@@ -229,7 +231,6 @@ public class MultiBuilder : EditorWindow
 		
 		System.Diagnostics.Process proc = new System.Diagnostics.Process ();
 		proc.StartInfo = procStartInfo;
-		Debug.Log ("Start");
 		
 		#if UNITY_3_4
 		Debug.Log ("Unity 3.4");
@@ -248,8 +249,6 @@ public class MultiBuilder : EditorWindow
 		#endif
 	}
 
-	private static string[] scene;
-
 	private static void SetScenes ()
 	{
 		Directory.CreateDirectory (path);
@@ -260,17 +259,6 @@ public class MultiBuilder : EditorWindow
 		
 		scene = l.ToArray ();
 	}
-	// リリースビルド
-	public static void ReleaseBuild ()
-	{
-		
-		if (BuildiOS (true) == false)
-			EditorApplication.Exit (1);
-		if (BuildAndroid (true) == false)
-			EditorApplication.Exit (1);
-		EditorApplication.Exit (0);
-	}
-	// 開発用ビルド
 
 	public static void BuildWindows ()
 	{
@@ -416,7 +404,6 @@ public class MultiBuilder : EditorWindow
 //		
 //		return false;
 //	}
-	// iOSビルド
 	private static bool BuildiOS (bool release)
 	{
 		BuildOptions opt = BuildOptions.SymlinkLibraries;
@@ -438,7 +425,7 @@ public class MultiBuilder : EditorWindow
 		Debug.LogError (errorMsg);
 		return false;
 	}
-	// Androidビルド
+
 	private static bool BuildAndroid (bool release)
 	{
 		Debug.Log ("Start Build( Android )");

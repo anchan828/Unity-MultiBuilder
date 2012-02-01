@@ -6,25 +6,6 @@ using System.Collections.Generic;
 using System.Text;
 public class MultiBuilder : EditorWindow
 {
-	static string tempTextPath = "multiBuilderTemp.txt";
-	static MultiBuilder w;
-	static string path = "BuildFile";
-	static string folderPath = "ExecutableFoloderPath";
-	private static Texture2D backGroundImage;
-	private static Texture2D windowsImage;
-	private static Texture2D macImage;
-	private static Texture2D webImage;
-	private static Texture2D iOSImage;
-	private static Texture2D androidImage;
-	private static Texture2D flashImage;
-	private const string MULTI_BUILD_WINDOWS = "MultiBuildWindows";
-	private const string MULTI_BUILD_MAC = "MultiBuildMac";
-	private const string MULTI_BUILD_WEBPLAYER = "MultiBuildWebPlayer";
-	private const string MULTI_BUILD_IOS = "MultiBuildiOS";
-	private const string MULTI_BUILD_ANDROID = "MultiBuildAndroid";
-	private const string MULTI_BUILD_FLASH = "MultiBuildFlash";
-	private static string[] scene;
-
 	[MenuItem("MultiBuilder/MultiBuilderMenu", false, 100000)]
 	static void Init ()
 	{
@@ -77,7 +58,7 @@ public class MultiBuilder : EditorWindow
 		GetPlatformData ();
 	}
 
-	private static bool isWindows, isMacOS, isWebPlayer, isiOS, isAndroid, isFlash;
+
 	private Vector2 scroll = Vector2.zero;
 	static string ImageFolderPath = "Assets/Editor/MultiBuilder/Images/";
 	private static EditorBuildSettingsScene[] editorScenes = EditorBuildSettings.scenes;
@@ -494,5 +475,12 @@ public class MultiBuilder : EditorWindow
 		
 		return false;
 	}
-	
+	static string tempTextPath = "multiBuilderTemp.txt";
+	static MultiBuilder w;
+	static string path = "BuildFile";
+	static string folderPath = "ExecutableFoloderPath";
+	private static string[] scene;
+	private static Texture2D backGroundImage, windowsImage, macImage, webImage, iOSImage, androidImage, flashImage;
+	private const string MULTI_BUILD_WINDOWS = "MultiBuildWindows", MULTI_BUILD_MAC = "MultiBuildMac", MULTI_BUILD_WEBPLAYER = "MultiBuildWebPlayer", MULTI_BUILD_IOS = "MultiBuildiOS", MULTI_BUILD_ANDROID = "MultiBuildAndroid", MULTI_BUILD_FLASH = "MultiBuildFlash";
+	private static bool isWindows, isMacOS, isWebPlayer, isiOS, isAndroid, isFlash;
 }

@@ -3,12 +3,13 @@ using System.Collections;
 using UnityEditor;
 using System.IO;
 using System.Collections.Generic;
-
+using System.Text;
 public class MultiBuilder : EditorWindow
 {
-
+	static string tempTextPath = "multiBuilderTemp.txt";
 	static MultiBuilder w;
 	static string path = "BuildFile";
+	static string folderPath = "ExecutableFoloderPath";
 	private static Texture2D backGroundImage;
 	private static Texture2D windowsImage;
 	private static Texture2D macImage;
@@ -28,14 +29,22 @@ public class MultiBuilder : EditorWindow
 	static void Init ()
 	{
 		GetPlatformData ();
-		
+		if (EditorPrefs.HasKey (folderPath))
+			path = EditorPrefs.GetString (folderPath);
 		
 		w = (MultiBuilder)EditorWindow.GetWindow (typeof(MultiBuilder));
 		w.maxSize = new Vector2 (550, 600);
 		w.minSize = new Vector2 (550, 600);
 		w.ShowPopup ();
 	}
-
+	static void ReadTextTemp ()
+	{
+		try {
+			path = Encoding.UTF8.GetString (File.ReadAllBytes (tempTextPath));
+		} catch (FileNotFoundException e) {
+			
+		}
+	}
 	static void GetPlatformData ()
 	{
 		if (EditorPrefs.HasKey (MULTI_BUILD_WINDOWS))
@@ -72,11 +81,12 @@ public class MultiBuilder : EditorWindow
 	private Vector2 scroll = Vector2.zero;
 	static string ImageFolderPath = "Assets/Editor/MultiBuilder/Images/";
 	private static EditorBuildSettingsScene[] editorScenes = EditorBuildSettings.scenes;
-
+	private static bool isBuildMessage = false;
+	private static string buildMessage = "";
 	void OnGUI ()
 	{
 		
-	
+		
 		GUIStyle style = new GUIStyle ();
 		style.fontStyle = FontStyle.Bold;
 		editorScenes = EditorBuildSettings.scenes;
@@ -98,7 +108,7 @@ public class MultiBuilder : EditorWindow
 		
 		for (int i = 0; i < editorScenes.Length; i++) {
 			EditorGUILayout.BeginHorizontal ();
-			editorScenes [i].enabled = GUILayout.Toggle (editorScenes [i].enabled, editorScenes [i].path);
+			editorScenes[i].enabled = GUILayout.Toggle (editorScenes[i].enabled, editorScenes[i].path);
 			Rect r = GUILayoutUtility.GetRect (15, 15);
 			EditorGUI.LabelField (new Rect (Screen.width - 90, r.y, r.width + 5, r.height + 5), "" + i, "");
 			EditorGUILayout.EndHorizontal ();
@@ -168,16 +178,41 @@ public class MultiBuilder : EditorWindow
 		EditorGUILayout.Toggle ("Symlink Unity Libraries", EditorUserBuildSettings.symlinkLibraries);
 		EditorGUILayout.Toggle ("Streamed", EditorUserBuildSettings.webPlayerStreamed);
 		EditorGUILayout.Toggle ("Offline Deployment", EditorUserBuildSettings.webPlayerOfflineDeployment);
+		GUILayout.Space (10);
+		isBuildMessage = GUILayout.Toggle (isBuildMessage, "Build Message");
+		if (isBuildMessage)
+			buildMessage = EditorGUILayout.TextField (buildMessage);
 		EditorGUILayout.EndVertical ();
 		EditorGUILayout.EndHorizontal ();
-		GUILayout.Space (20);
-		Rect br = GUILayoutUtility.GetRect (Screen.width / 2, 25);
-		if (GUI.Button (new Rect ((Screen.width / 4) * 3 - 20, Screen.height - 60, Screen.width / 4, 25), "Build")) {
-			BuildStart ();
+		GUILayout.Space (2);
+		PathFolder ();
+		if (GUI.Button (new Rect ((Screen.width / 4) * 3 + 20, Screen.height - 50, Screen.width / 4 - 20, 25), "Build")) {
+			SaveData ();
 		}
 		SetPlatformData ();
 	}
 
+	static void SaveData ()
+	{
+		if (isWindows || isMacOS || isWebPlayer || isiOS || isAndroid || isFlash) {
+			File.WriteAllBytes (tempTextPath, Encoding.UTF8.GetBytes (path));
+			EditorPrefs.SetString (folderPath, path);
+			if (isBuildMessage) {
+				File.AppendAllText (path + "/UpdateMessage.txt", "\n" + buildMessage + "	" + System.DateTime.Now + "\n", Encoding.UTF8);
+			}
+			BuildStart ();
+		}
+	}
+
+	static void PathFolder ()
+	{
+		EditorGUILayout.LabelField ("Folder :", "");
+		EditorGUILayout.BeginHorizontal ();
+		EditorGUILayout.TextField (path, GUILayout.Width (Screen.width * 3 / 5));
+		if (GUILayout.Button ("SetPath", GUILayout.Width (80)))
+			path = EditorUtility.SaveFolderPanel ("Select Executable Folder", "", "");
+		EditorGUILayout.EndHorizontal ();
+	}
 	static Texture2D SetPlatformImage (Texture2D tex, string texURL)
 	{
 		Rect rect = GUILayoutUtility.GetRect (32, 32);
@@ -185,7 +220,6 @@ public class MultiBuilder : EditorWindow
 			EditorGUI.DropShadowLabel (new Rect (rect.x + 10, rect.y - 2, 32, 32), new GUIContent (tex));
 		} else
 			tex = (Texture2D)AssetDatabase.LoadAssetAtPath (ImageFolderPath + texURL, typeof(Texture2D));
-		
 		return tex;
 	}
 
@@ -247,6 +281,9 @@ public class MultiBuilder : EditorWindow
 			proc.Start ();
 		}
 		#endif
+		proc.WaitForExit ();
+		File.Delete (tempTextPath);
+		Debug.Log ("End");
 	}
 
 	private static void SetScenes ()
@@ -263,6 +300,7 @@ public class MultiBuilder : EditorWindow
 	public static void BuildWindows ()
 	{
 		SetScenes ();
+		ReadTextTemp ();
 		Debug.Log ("BuildWindows");
 		if (!BuildWindows (false))
 			EditorApplication.Exit (1);
@@ -272,6 +310,7 @@ public class MultiBuilder : EditorWindow
 	public static void BuildMacOS ()
 	{
 		SetScenes ();
+		ReadTextTemp ();
 		Debug.Log ("BuildMacOS");
 		if (!BuildMacOS (false))
 			EditorApplication.Exit (1);
@@ -281,6 +320,7 @@ public class MultiBuilder : EditorWindow
 	public static void BuildWebPlayer ()
 	{
 		SetScenes ();
+		ReadTextTemp ();
 		Debug.Log ("BuildWebPlayer");
 		if (!BuildWebPlayer (false))
 			EditorApplication.Exit (1);
@@ -289,7 +329,7 @@ public class MultiBuilder : EditorWindow
 
 //	public static  void BuildFlashPlayer ()
 //	{
-//		SetScenes ();
+//		SetScenes ();ReadTextTemp ();
 //		Debug.Log ("BuildFlashPlayer");
 //		if (!BuildFlashPlayer (false))
 //			EditorApplication.Exit (1);
@@ -299,6 +339,7 @@ public class MultiBuilder : EditorWindow
 	public static void BuildiOS ()
 	{
 		SetScenes ();
+		ReadTextTemp ();
 		Debug.Log ("BuildiOS");
 		if (!BuildiOS (false))
 			EditorApplication.Exit (1);
@@ -308,6 +349,7 @@ public class MultiBuilder : EditorWindow
 	public static void BuildAndroid ()
 	{
 		SetScenes ();
+		ReadTextTemp ();
 		Debug.Log ("BuildAndroid");
 		if (!BuildAndroid (false))
 			EditorApplication.Exit (1);
@@ -328,7 +370,7 @@ public class MultiBuilder : EditorWindow
 		
 		string folder = path + "/Window";
 		Directory.CreateDirectory (folder);
-		string errorMsg = BuildPipeline.BuildPlayer (scene, folder + "/Windows.exe", BuildTarget.StandaloneWindows, opt);
+		string errorMsg = BuildPipeline.BuildPlayer (scene, folder + "/" + PlayerSettings.productName + ".exe", BuildTarget.StandaloneWindows, opt);
 		
 		if (string.IsNullOrEmpty (errorMsg)) {
 			Debug.Log ("Build( Windows ) Success.");
@@ -350,7 +392,7 @@ public class MultiBuilder : EditorWindow
 			opt |= BuildOptions.AllowDebugging;
 		string folder = path + "/Mac";
 		Directory.CreateDirectory (folder);
-		string errorMsg = BuildPipeline.BuildPlayer (scene, folder + "/Mac.app", BuildTarget.StandaloneOSXIntel, opt);
+		string errorMsg = BuildPipeline.BuildPlayer (scene, folder + "/" + PlayerSettings.productName + ".app", BuildTarget.StandaloneOSXIntel, opt);
 		
 		if (string.IsNullOrEmpty (errorMsg)) {
 			Debug.Log ("Build( Mac ) Success.");
@@ -377,7 +419,7 @@ public class MultiBuilder : EditorWindow
 			opt |= BuildOptions.ConnectWithProfiler;
 		if (EditorUserBuildSettings.allowDebugging)
 			opt |= BuildOptions.AllowDebugging;
-		string errorMsg = BuildPipeline.BuildPlayer (scene, path + "/WebPlayer", BuildTarget.WebPlayer, opt);
+		string errorMsg = BuildPipeline.BuildPlayer (scene, path + "/WebPlayer/" + PlayerSettings.productName, BuildTarget.WebPlayer, opt);
 		
 		if (string.IsNullOrEmpty (errorMsg)) {
 			Debug.Log ("Build( Web ) Success.");
@@ -395,7 +437,7 @@ public class MultiBuilder : EditorWindow
 //		// シーン、出力ファイル（フォルダ）、ターゲット、オプションを指定
 //		string folder = path + "/Flash";
 //		Directory.CreateDirectory (folder);
-//		string errorMsg = BuildPipeline.BuildPlayer (scene, folder + "/Flash.swf", BuildTarget.FlashPlayer, opt);
+//		string errorMsg = BuildPipeline.BuildPlayer (scene, folder + "/"+PlayerSettings.productName+".swf", BuildTarget.FlashPlayer, opt);
 //		
 //		if (string.IsNullOrEmpty (errorMsg)) {
 //			Debug.Log ("Build( Flash ) Success.");
@@ -440,7 +482,7 @@ public class MultiBuilder : EditorWindow
 		// シーン、出力ファイル（フォルダ）、ターゲット、オプションを指定
 		string folder = path + "/Android";
 		Directory.CreateDirectory (folder);
-		string errorMsg = BuildPipeline.BuildPlayer (scene, folder + "/Android.apk", BuildTarget.Android, opt);
+		string errorMsg = BuildPipeline.BuildPlayer (scene, folder + "/" + PlayerSettings.productName + ".apk", BuildTarget.Android, opt);
 		// errorMsgがない場合は成功
 		if (string.IsNullOrEmpty (errorMsg)) {
 			Debug.Log ("Build( Android ) Success.");
